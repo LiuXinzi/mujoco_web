@@ -51,6 +51,7 @@ function CameraRig({
   return <OrbitControls ref={controls} makeDefault enableZoom />;
 }
 
+
 const App = () => {
   /* ------- 状态：滑块当前值 ------- */
   const [dist, setDist] = useState(3);          // 初始 3 m
