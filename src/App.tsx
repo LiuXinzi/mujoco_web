@@ -1,95 +1,90 @@
-import { useState, useRef } from "react";
+/* ---------- React & Three 基础 ---------- */
+import { useState, useRef, useEffect } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import * as THREE from "three";
-import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 
-import { Mujoco } from "./components/Mujoco";
+/* ---------- MuJoCo 组件（已暴露 camera） ---------- */
+import { Mujoco, MujocoHandle } from "./components/Mujoco";
+
+/* ---------- UI：滑块 ---------- */
 import ZoomSlider from "./components/utils";
 
+/* ---------- 后期景深 ---------- */
 import { DepthOfField, EffectComposer } from "@react-three/postprocessing";
 
+/* ---------- 样式 ---------- */
 import "./App.css";
 import "./index.css";
 
-/* ───────── 相机控制器：滑块 ←→ 滚轮 双向同步 ───────── */
-function CameraRig({
-  distRef,
-  setDist,
-}: {
-  distRef: React.MutableRefObject<number>;
-  setDist: (v: number) => void;
-}) {
-  const { camera } = useThree();
-  const controls = useRef<OrbitControlsImpl | null>(null);
-
-  // 记录上一次已同步到相机的半径，避免重复写
-  const lastDist = useRef(distRef.current);
+/* === ★ 新增：把 MuJoCo 距离同步到 Three.js 相机 === */
+function CameraSync({ mujocoRef }: { mujocoRef: React.RefObject<MujocoHandle> }) {
+  const { camera, controls } = useThree();           // controls 由 drei 自动注入
+  const last = useRef<number>(0);
 
   useFrame(() => {
-    /* ---------- ① 若滑块改变，把相机推到目标半径 ---------- */
-    const targetRadius = distRef.current;
-    if (Math.abs(targetRadius - lastDist.current) > 1e-4) {
-      const dir = camera.position.clone().normalize().multiplyScalar(targetRadius);
+    const d = mujocoRef.current?.camera?.getZoom?.();
+    if (typeof d === "number" && Math.abs(d - last.current) > 1e-4) {
+      const dir = camera.position.clone().normalize().multiplyScalar(d);
       camera.position.copy(dir);
-      lastDist.current = targetRadius;
-    }
-
-    /* ---------- ② 更新 OrbitControls 内部状态 ---------- */
-    controls.current?.update();
-
-    /* ---------- ③ 读取滚轮缩放后的真实半径，如有变化回写滑块 ---------- */
-    const actualRadius = camera.position.length();
-    if (Math.abs(actualRadius - distRef.current) > 0.05) {
-      distRef.current = actualRadius; // 写回 ref（供 ① 判断）
-      setDist(actualRadius);          // 更新滑块 UI
-      lastDist.current = actualRadius;
+      (controls as any)?.update?.();                 // 同步 OrbitControls 内部状态
+      last.current = d;
     }
   });
 
-  // 开启鼠标滚轮缩放
-  return <OrbitControls ref={controls} makeDefault enableZoom />;
+  return null;                                       // 不渲染任何内容
 }
 
-
 const App = () => {
-  /* ------- 状态：滑块当前值 ------- */
-  const [dist, setDist] = useState(3);          // 初始 3 m
-  const distRef = useRef(dist);                 // 不触发渲染的即时数值
+  const [dist, setDist] = useState(3);
+  const mujocoRef = useRef<MujocoHandle>(null);
+
+  /* ===== 全局滚轮 → MuJoCo zoom ===== */
+  useEffect(() => {
+    const wheel = (e: WheelEvent) => {
+      const factor = 1 + e.deltaY * 0.002;
+      mujocoRef.current?.camera?.zoom(factor);
+      const z = mujocoRef.current?.camera?.getZoom?.();
+      if (typeof z === "number") setDist(z);
+    };
+    window.addEventListener("wheel", wheel, { passive: true });
+    return () => window.removeEventListener("wheel", wheel);
+  }, []);
 
   return (
     <div className="w-full h-full border-4 border-blue-500" style={{ position: "relative" }}>
       <Canvas
-        shadows="soft"
         dpr={window.devicePixelRatio}
+        shadows="soft"
         style={{ borderRadius: "inherit", margin: "0 auto", width: 600, height: 400 }}
-        onCreated={(state) => {
-          state.scene.background = new THREE.Color(0x264059);
-        }}
+        onCreated={({ scene }) => (scene.background = new THREE.Color(0x264059))}
       >
-        {/* ---------------- 灯光 ---------------- */}
-        <ambientLight color={0xffffff} intensity={0.1} />
+        {/* ---------- 灯光 ---------- */}
+        <ambientLight intensity={0.1} />
         <spotLight position={[0, 2, 2]} angle={0.15} penumbra={1} decay={1} intensity={3.14} />
 
-        {/* ---------------- 相机 & 控制器 ---------------- */}
-        <PerspectiveCamera makeDefault position={[2, 1.7, 1.7]} fov={45} />
-        <CameraRig distRef={distRef} setDist={setDist} />
+        {/* ---------- Three.js 相机固定方向，距离由 CameraSync 决定 ---------- */}
+        <PerspectiveCamera makeDefault position={[0, 0, 1]} fov={45} />
+        <OrbitControls makeDefault enableZoom={false} />
 
-        {/* ---------------- MuJoCo 场景 ---------------- */}
-        <Mujoco sceneUrl={"agility_cassie/scene.xml"} />
+        {/* ---------- 同步器：每帧把距离写给 Three.js 相机 ---------- */}
+        <CameraSync mujocoRef={mujocoRef} />
 
-        {/* ---------------- 后期效果 ---------------- */}
+        {/* ---------- MuJoCo 场景 ---------- */}
+        <Mujoco ref={mujocoRef} sceneUrl={"agility_cassie/scene.xml"} />
+
+        {/* ---------- 后期效果 ---------- */}
         <EffectComposer>
           <DepthOfField focusDistance={0} focalLength={0.02} bokehScale={2} height={480} />
         </EffectComposer>
       </Canvas>
 
-      {/* ---------------- 滑块控件 ---------------- */}
+      {/* ---------- 滑块控件 ---------- */}
       <ZoomSlider
         value={dist}
         onChange={(v) => {
-          setDist(v);          // 更新 UI
-          distRef.current = v; // 写回 ref → 下一帧相机同步
+          setDist(v);
+          mujocoRef.current?.camera?.setZoom(v);     // 绝对距离写进 MuJoCo
         }}
       />
     </div>

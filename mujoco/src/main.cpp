@@ -10,6 +10,7 @@
 #include <model.h>
 #include <simulation.h>
 #include <state.h>
+#include <camera.h>
 
 using namespace emscripten;
 
@@ -601,7 +602,16 @@ EMSCRIPTEN_BINDINGS(mujoco_wasm) {
       .function("ptr", &State::ptr, allow_raw_pointers())
       .function("free", &State::free)
       .function("getVal", &State::getVal);
+  class_<Camera>("Camera")
+      .constructor<>()
 
+    
+      .function("setZoom", &Camera::setZoom)
+      .function("getZoom", &Camera::getZoom)
+      .function("zoom",    &Camera::zoom)
+
+      .function("move", &Camera::move, allow_raw_pointers())
+      .function("ptr",  &Camera::ptr,  allow_raw_pointers());
   class_<Simulation>("Simulation")
       .constructor<Model *, State *>()
       .function("state", &Simulation::state, allow_raw_pointers())
