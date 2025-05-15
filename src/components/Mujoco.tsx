@@ -19,7 +19,6 @@ import {
   loadMujocoScene,
 } from "./mujocoUtils";
 
-/* 供父组件通过 ref 使用相机 */
 export interface MujocoHandle {
   camera: any | null;
 }
@@ -45,7 +44,6 @@ const MujocoComponent = forwardRef<MujocoHandle, MujocoProps>(
 
     const cameraRef = useRef<any | null>(null);
 
-    /* 1. 加载 MuJoCo 模块 */
     useEffect(() => {
       (async () => {
         try {
@@ -58,7 +56,6 @@ const MujocoComponent = forwardRef<MujocoHandle, MujocoProps>(
       })();
     }, []);
 
-    /* 2. 加载场景并创建 Camera */
     useEffect(() => {
       if (!mujocoContainer) return;
       (async () => {
@@ -70,7 +67,6 @@ const MujocoComponent = forwardRef<MujocoHandle, MujocoProps>(
             scene,
           );
 
-          /* ---- 仅首次生成 Camera ---- */
           if (!cameraRef.current) {
             const Module: any = mujocoContainer.getMujocoModule(); // ★ 修改
             cameraRef.current = new Module.Camera();
@@ -87,7 +83,6 @@ const MujocoComponent = forwardRef<MujocoHandle, MujocoProps>(
       })();
     }, [mujocoContainer, sceneUrl, scene]);
 
-    /* 3. 每帧驱动模拟并刷新 Three 场景 */
     useFrame(({ clock }) => {
       if (!mujocoContainer || loadingSceneRef.current || errorRef.current) return;
 
@@ -110,7 +105,6 @@ const MujocoComponent = forwardRef<MujocoHandle, MujocoProps>(
       }
     });
 
-        /* 4. 暴露 camera 给父组件 */
         useImperativeHandle(
       ref,
       () => ({ camera: cameraRef.current }),
