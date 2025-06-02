@@ -9,8 +9,8 @@ export interface ZoomSliderProps {
 export default function ZoomSlider({
   value,
   onChange,
-  min = 2,
-  max = 50,
+  min = 1,
+  max = 5,
   step = 0.1,
 }: ZoomSliderProps) {
   return (

@@ -10,7 +10,7 @@
 #include <model.h>
 #include <simulation.h>
 #include <state.h>
-
+#include <traj.cpp>
 using namespace emscripten;
 
 // main function
@@ -20,7 +20,8 @@ int main(int argc, char **argv) {
 }
 
 EMSCRIPTEN_BINDINGS(mujoco_wasm) {
-
+  function("generate_target_sequence", &generate_target_sequence);
+  function("get_sequence_length", &get_sequence_length);
   value_object<mjLROpt>("mjLROpt")
       .field("mode", &mjLROpt::mode)
       .field("useexisting", &mjLROpt::useexisting)
