@@ -33,7 +33,7 @@ const App = () => {
         />
         <PerspectiveCamera makeDefault position={[2.0, 1.7, 1.7]} fov={45} />
         <OrbitControls makeDefault />
-        <Mujoco sceneUrl={"agility_cassie/scene.xml"} />
+        <Mujoco sceneUrl={"humanoid.xml"} />
 
         {/* Post-Processing Effects */}
         <EffectComposer>
