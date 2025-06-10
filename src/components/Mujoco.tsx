@@ -15,9 +15,15 @@ import {
 
 export interface MujocoProps {
   sceneUrl: string;
+  frameIndex: number;
+  onLoadedTrajectory?: (T: number) => void;
 }
 
-export const MujocoComponent = ({ sceneUrl }: MujocoProps) => {
+export const MujocoComponent = ({ 
+  sceneUrl,
+  frameIndex,
+  onLoadedTrajectory,
+ }: MujocoProps) => {
   // The 35ms threshold acts as a safeguard to prevent the simulation from
   // accumulating too much lag, which could degrade performance or accuracy.
   const MAX_SIMULATION_LAG_MS = 35.0;
@@ -62,7 +68,15 @@ export const MujocoComponent = ({ sceneUrl }: MujocoProps) => {
           // Time-consuming operation that should be moved into a Worker.
           loadMujocoScene(mujocoContainer, sceneUrl);
 
-          updatePropsRef.current = await buildThreeScene(mujocoContainer, scene);
+          // updatePropsRef.current = await buildThreeScene(mujocoContainer, scene);
+          const props = await buildThreeScene(mujocoContainer, scene);
+          updatePropsRef.current = props;
+
+          // 通知父组件，有多少帧、多少点
+          if (onLoadedTrajectory) {
+            const { raw, T, N } = mujocoContainer.getTrajectory();
+            onLoadedTrajectory(T);
+          }
         }
       } catch (error: unknown) {
         errorRef.current = true;
@@ -78,7 +92,11 @@ export const MujocoComponent = ({ sceneUrl }: MujocoProps) => {
       }
     }
   }, [mujocoContainer, scene, sceneUrl]);
-
+  useEffect(() => {
+    if (updatePropsRef.current) {
+      updatePropsRef.current.updatePointCloud(frameIndex);
+    }
+  }, [frameIndex]);
   // Update the Three.js scene with information from the MuJoCo simulation.
   useFrame(({ clock }) => {
     if (!mujocoContainer || loadingSceneRef.current || errorRef.current) {

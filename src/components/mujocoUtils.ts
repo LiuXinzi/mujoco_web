@@ -398,10 +398,16 @@ export const buildThreeScene = async (
   if (object) {
     scene.remove(object);
   }
-
+  const { raw: trajectory, T, N } = mujocoContainer.getTrajectory();
+  const geo = new THREE.BufferGeometry();
+  const positions = new Float32Array(N * 3);
+  geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  const mat = new THREE.PointsMaterial({ size: 0.2 });
+  const points = new THREE.Points(geo, mat);
   // Create a new root object.
   const mujocoRoot = new THREE.Group();
   mujocoRoot.name = ROOT_OBJECT_NAME;
+  mujocoRoot.add(points)
   scene.add(mujocoRoot);
 
   const bodies: { [key: number]: Body } = {};
@@ -694,8 +700,9 @@ export const buildThreeScene = async (
       bodies[0].add(bodies[b]);
     }
   }
-
-  return new UpdateProps(bodies, lights, cylinders, spheres);
+  const updateProps = new UpdateProps(bodies, lights, cylinders, spheres)
+  updateProps.setPointCloud(points, trajectory, T, N)
+  return updateProps;
 };
 
 /**
