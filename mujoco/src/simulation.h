@@ -13,6 +13,10 @@
 #include <model.h>
 #include <state.h>
 
+#include <random>
+#include <vector>
+#include <iostream>
+
 /**
  * @brief Manages the simulation by interfacing Model and State.
  *
@@ -32,6 +36,39 @@
  * sim.free();
  * ```
  */
+std::vector<float> generateRandomPointCloud(int T, int N) {
+    // 预分配空间
+    std::vector<float> data;
+    data.reserve(static_cast<size_t>(T) * N * 3);
+
+    // 随机数引擎（用 std::random_device 做种子）
+    static std::mt19937 rng{ std::random_device{}() };
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+
+    // 按帧、按点填充 x,y,z
+    for (int t = 0; t < T; ++t) {
+        for (int i = 0; i < N; ++i) {
+            data.push_back(dist(rng)); // x
+            data.push_back(dist(rng)); // y
+            data.push_back(dist(rng)); // z
+        }
+    }
+    std::cout << "Create" << std::endl;
+    std::cout << "T " << T << std::endl;
+    std::cout << "N " << N << std::endl;
+    for (int t = 0; t < T; ++t) {
+    std::cout << "Frame " << t << ":" << std::endl;
+    for (int i = 0; i < N; ++i) {
+        int idx = (t * N + i) * 3;
+        float x = data[idx];
+        float y = data[idx + 1];
+        float z = data[idx + 2];
+        std::cout << "  Point " << i << ": (" << x << ", " << y << ", " << z << ")" << std::endl;
+    }
+    }
+    return data;
+}
+
 class Simulation {
 public:
   Simulation(Model *m, State *s) {
@@ -115,6 +152,7 @@ public:
                   quat2); // ref*neg(child)*root
     }
   }
+  // function added
 
   // clang-format off
 

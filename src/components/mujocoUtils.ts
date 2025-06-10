@@ -321,6 +321,7 @@ export const loadMujocoModule = async (): Promise<MujocoContainer> => {
   const state = new mujocoModule.State(model);
   const simulation = new mujocoModule.Simulation(model, state);
   console.log("Successfully created the default simulation.");
+  // console.log(simulation)
 
   return new MujocoContainer(mujocoModule, simulation);
 };
@@ -349,14 +350,29 @@ export const loadMujocoScene = (mujocoContainer: MujocoContainer, sceneURl: stri
   const newModel = new mujocoModule.Model(`${VIRTUAL_FILE_SYSTEM}/${sceneURl}`);
   const newState = new mujocoModule.State(newModel);
   const newSimulation = new mujocoModule.Simulation(newModel, newState);
-
+  console.log(newModel)
+  console.log(newSimulation)
   // Check for errors in the MuJoCo model.
   if (newModel.getError() != "") {
     throw new Error(`Could not load the model "${sceneURl}": ${newModel.getError()}`);
   }
 
   mujocoContainer.setSimulation(newSimulation);
+  const T = 4;
+  const N = 4;
+
+  const rawArray = (mujocoModule as any).generateRandomPointCloud(T, N);
+  // console.log("aaa",rawArray.size())
+  const len = rawArray.size()
+  const raw = new Float32Array(len);
+  for (let i = 0; i < len; i++) {
+  raw[i] = rawArray.get(i);
+  }
+  console.log(raw)
+  mujocoContainer.setTrajectory(raw, T, N);
+  console.log(mujocoContainer)
   console.log(`Successfully loaded the scene: ${sceneURl}`);
+  
 };
 
 

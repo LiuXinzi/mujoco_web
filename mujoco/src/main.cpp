@@ -20,7 +20,8 @@ int main(int argc, char **argv) {
 }
 
 EMSCRIPTEN_BINDINGS(mujoco_wasm) {
-
+  register_vector<float>("VectorFloat");
+  function("generateRandomPointCloud", &generateRandomPointCloud);
   value_object<mjLROpt>("mjLROpt")
       .field("mode", &mjLROpt::mode)
       .field("useexisting", &mjLROpt::useexisting)
