@@ -12,7 +12,19 @@ const App = () => {
   const [frameIndex, setFrameIndex] = useState(0);
   const [maxFrame, setMaxFrame]     = useState(0);
   return (
-    <div className="relative w-full h-full border-4 border-blue-500">
+    <div id="canvas-container" className="relative w-screen h-screen">
+      <button
+        onClick={() => {
+          const el = document.getElementById("canvas-container");
+          if (el?.requestFullscreen) {
+            el.requestFullscreen();
+          }
+        }}
+        className="absolute top-4 right-4 z-20 p-2 bg-white bg-opacity-75 rounded"
+      >
+        Full Screen
+      </button>
+
       <div className="absolute top-4 left-4 z-20 p-2 bg-white bg-opacity-75 rounded">
         <label className="block mb-1">
           Frame: {frameIndex} / {maxFrame}
@@ -25,20 +37,15 @@ const App = () => {
           onChange={e => setFrameIndex(Number(e.target.value))}
         />
       </div>
+      <div className="flex items-center justify-center w-full h-full">
       <Canvas
         shadows="soft"
         dpr={window.devicePixelRatio}
-        style={{
-          borderRadius: "inherit",
-          margin: "0 auto", // Center horizontally.
-          width: 600,
-          height: 400
-        }}
+        style={{ width: "70%", height: "70%" }}
         onCreated={(state) => {
           state.scene.background = new THREE.Color(0x264059);
         }}
       >
-        {/* <AdaptiveDpr /> */}
         <ambientLight color={0xffffff} intensity={0.1} />
         <spotLight
           position={[0, 2, 2]}
@@ -56,7 +63,7 @@ const App = () => {
             setMaxFrame(T - 1);
           }}
         />
-        {/* Post-Processing Effects */}
+
         <EffectComposer>
           <DepthOfField
             focusDistance={0}
@@ -66,6 +73,7 @@ const App = () => {
           />
         </EffectComposer>
       </Canvas>
+      </div>
     </div>
   );
 };

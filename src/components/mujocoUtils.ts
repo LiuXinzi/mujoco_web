@@ -358,8 +358,8 @@ export const loadMujocoScene = (mujocoContainer: MujocoContainer, sceneURl: stri
   }
 
   mujocoContainer.setSimulation(newSimulation);
-  const T = 4;
-  const N = 4;
+  const T = 10;
+  const N = 6890;
 
   const rawArray = (mujocoModule as any).generateRandomPointCloud(T, N);
   // console.log("aaa",rawArray.size())
@@ -402,7 +402,7 @@ export const buildThreeScene = async (
   const geo = new THREE.BufferGeometry();
   const positions = new Float32Array(N * 3);
   geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-  const mat = new THREE.PointsMaterial({ size: 0.2 });
+  const mat = new THREE.PointsMaterial({ size: 0.04 });
   const points = new THREE.Points(geo, mat);
   // Create a new root object.
   const mujocoRoot = new THREE.Group();
