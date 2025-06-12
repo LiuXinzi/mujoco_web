@@ -402,7 +402,7 @@ export const buildThreeScene = async (
   const geo = new THREE.BufferGeometry();
   const positions = new Float32Array(N * 3);
   geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-  const mat = new THREE.PointsMaterial({ size: 0.04 });
+  const mat = new THREE.PointsMaterial({ size: 0.02 });
   const points = new THREE.Points(geo, mat);
   // Create a new root object.
   const mujocoRoot = new THREE.Group();
